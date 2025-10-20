@@ -13,6 +13,7 @@ import (
 	"convo/internal/handlers/user"
 	"convo/internal/handlers/preprocess"
 	"convo/internal/handlers/room"
+
 )
 
 type Server struct {
@@ -77,9 +78,13 @@ func (s *Server) Run() error {
 		r.Post("/add", HandlerFunc(&room.CreateRoomHandler{DB: s.DB}))
 		r.Post("/{id}/members", HandlerFunc(&room.AddMembersHandler{DB: s.DB}))
         r.Post("/{id}/send-message", HandlerFunc(&room.SendMessageHandler{DB: s.DB}))
+        r.Get("/{id}/check", HandlerFunc(&room.RoomCheckHandler{DB: s.DB}))
 		// future: r.Get("/", list rooms), r.Post("/{id}/join", join handler), etc.
 		// future: r.Get("/", list rooms), r.Post("/{id}/join", join handler), etc.
 	})
+
+	// WebSocket endpoint (public)
+	r.Get("/ws", handlers.Handler)
 
 	fmt.Printf("Server running on %s\n", s.Addr)
 	return http.ListenAndServe(s.Addr, r)
