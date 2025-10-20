@@ -6,6 +6,7 @@ import (
 	"database/sql"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 
 	"convo/internal/middleware"
 	"convo/internal/handlers"
@@ -43,6 +44,14 @@ func (s *Server) Run() error {
 
 	// middlewares
 	r.Use(middleware.Logger)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"*"}, // allow all, restrict in prod
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // seconds
+	}))
 
 	// Mount routes
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -75,10 +84,12 @@ func (s *Server) Run() error {
 
 	r.Route("/rooms", func(r chi.Router) {
 		r.Use(middleware.AuthJWT(s.JWTSecret))
+		r.Get("/", HandlerFunc(&room.RoomListHandler{DB: s.DB}))
+		r.Get("/{id}/messages", HandlerFunc(&room.RoomMessagesHandler{DB: s.DB}))
 		r.Post("/add", HandlerFunc(&room.CreateRoomHandler{DB: s.DB}))
 		r.Post("/{id}/members", HandlerFunc(&room.AddMembersHandler{DB: s.DB}))
-        r.Post("/{id}/send-message", HandlerFunc(&room.SendMessageHandler{DB: s.DB}))
-        r.Get("/{id}/check", HandlerFunc(&room.RoomCheckHandler{DB: s.DB}))
+		r.Post("/{id}/send-message", HandlerFunc(&room.SendMessageHandler{DB: s.DB}))
+		r.Get("/{id}/check", HandlerFunc(&room.RoomCheckHandler{DB: s.DB}))
 		// future: r.Get("/", list rooms), r.Post("/{id}/join", join handler), etc.
 		// future: r.Get("/", list rooms), r.Post("/{id}/join", join handler), etc.
 	})

@@ -1,22 +1,22 @@
+package utils
+
 import (
 	"os"
+	"time"
+	"database/sql"
 	"convo/internal/database"
+	"github.com/golang-jwt/jwt/v5"
 )
+
 // GetJWTSecret returns the JWT secret from env
 func GetJWTSecret() string {
 	return os.Getenv("JWT_SECRET")
 }
 
 // GetDB returns the global DB connection
-func GetDB() *database.DB {
+func GetDB() *sql.DB {
 	return database.GetDB()
 }
-package utils
-
-import (
-	"time"
-	"github.com/golang-jwt/jwt/v5"
-)
 
 func GenerateJWT(userID int64, secret string, ttlHours int) (string, error) {
 	claims := jwt.MapClaims{
